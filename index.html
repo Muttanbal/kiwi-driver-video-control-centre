@@ -9,9 +9,22 @@
 <section class="card"><h2>Action queue</h2><div id="actions"></div></section>
 <section class="card"><h2>Video pipeline</h2><p id="pipelineNote">Airtable statuses only. Verified publication requires direct Metricool checks.</p><div class="scroll"><table><thead><tr><th>Video</th><th>Brand</th><th>Airtable</th><th>HeyGen</th><th>Visual & branding QA</th><th>Keywords</th><th>Metricool</th><th>Network publication</th><th>Errors / retry</th></tr></thead><tbody id="videos"><tr><td colspan="9" class="muted">No verified live data connection</td></tr></tbody></table></div></section>
 <section class="card"><h2>Required end-to-end verification</h2><div class="grid"><div><h3>1. Source</h3><p>Read Airtable queue, brand, approvals and duplicate IDs. Airtable remains source of truth.</p></div><div><h3>2. Generation</h3><p>Allow HeyGen only after collision and hold checks; reconcile video IDs and render results.</p></div><div><h3>3. Quality</h3><p>Verify branding, framing, captions, keywords, aspect ratio and explicit review approval.</p></div><div><h3>4. Scheduling</h3><p>Check Metricool account connections and format support; prevent duplicate posts.</p></div><div><h3>5. Publication</h3><p>Verify every expected network independently, with actual post ID, URL and published timestamp.</p></div><div><h3>6. Recovery</h3><p>Show actionable failures, retry limits and audit history; never blindly regenerate.</p></div></div></section>
-<section class="card" id="live"><h2>Connect Airtable · read-only</h2><p>Enter the dashboard access key configured in Netlify. It stays in this browser tab only; it is not stored or included in the URL.</p><div class="actions"><input id="access" type="password" autocomplete="off" placeholder="Dashboard access key" aria-label="Dashboard access key"><button id="sync" onclick="syncAirtable()">Check Airtable</button></div><p id="syncstatus">Not connected. No publication verification available.</p><hr><h3>HeyGen API connection test</h3><p>Checks an existing completed video, without generating or publishing anything.</p><button onclick="testHeygen()">Test HeyGen connection</button><p id="heygenResult" role="status">Not yet tested.</p></section>
+<section class="card" id="live"><h2>Connect Airtable · read-only</h2><p>Enter the dashboard access key configured in Netlify. It stays in this browser tab only; it is not stored or included in the URL.</p><div class="actions"><input id="access" type="password" autocomplete="off" placeholder="Dashboard access key" aria-label="Dashboard access key"><button id="sync" onclick="syncAirtable()">Check Airtable</button></div><p id="syncstatus">Not connected. No publication verification available.</p><hr><h3>HeyGen API connection test</h3><p>Checks an existing completed video, without generating or publishing anything.</p><button onclick="testHeygen()">Test HeyGen connection</button><p id="heygenResult" role="status">Not yet tested.</p><hr><h3>Metricool API connection test</h3><p>Read-only verification of configured brands. This does not schedule or publish posts.</p><button onclick="testMetricool()">Test Metricool connection</button><p id="metricoolResult" role="status">Not yet tested.</p></section>
 <script>
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function testMetricool(){
+ const key=document.getElementById('access').value;
+ const status=document.getElementById('metricoolResult');
+ if(!key){status.textContent='Enter your dashboard access key above first.';return;}
+ status.textContent='Checking Metricool…';
+ try{
+  const response=await fetch('/.netlify/functions/metricool-status',{headers:{'x-dashboard-key':key},cache:'no-store'});
+  const data=await response.json();
+  if(!response.ok)throw Error(data.error||'HTTP '+response.status);
+  const brands=data.brands||[];
+  status.textContent='Metricool API response received · '+brands.map(b=>b.name+': '+(b.found?'found':'not found')).join(' · ')+' · Published posts not yet verified · Tiptoe ON HOLD';
+ }catch(e){status.textContent='Metricool test failed: '+e.message;}
+}
 async function testHeygen(){
  const key=document.getElementById('access').value;
  const result=document.getElementById('heygenResult');
