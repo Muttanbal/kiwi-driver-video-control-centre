@@ -32,7 +32,7 @@ exports.handler=async event=>{
      const f=r.fields||{};
      videos.push({id:r.id,brand:brand.name,title:field(f,"Content Title","Title","Video Title","Name")||r.id,
       queue:field(f,"Queue Status","Status","Production Status"),
-      heygen:field(f,"HeyGen Status","Video Status"),
+      heygen:field(f,"HeyGen Status","Video Status"),heygenVideoId:field(f,"HeyGen Video ID"),
       metricool:field(f,"Metricool Status","Publishing Status"),
       keyword:field(f,"Keyword Lookup Status","Keywords / Tags"),
       qa:field(f,"Creative and QC Audit","QA Status","Review Status"),
