@@ -20,13 +20,17 @@ exports.handler=async event=>{
  for(const brand of BASES){
   if(brand.hold){continue;} // TTW is deliberately excluded from all API calls
   try{
-   const url="https://api.airtable.com/v0/"+brand.base+"/"+brand.table+"?pageSize=50";
-   const res=await fetch(url,{headers:{Authorization:"Bearer "+token},signal:AbortSignal.timeout(9000)});
-   if(!res.ok)throw new Error("Airtable returned HTTP "+res.status);
-   const data=await res.json();
-   for(const r of data.records||[]){
-    const f=r.fields||{};
-    videos.push({id:r.id,brand:brand.name,title:field(f,"Content Title","Title","Video Title","Name")||r.id,
+   let offset=null, pages=0;
+   do {
+    const params=new URLSearchParams({pageSize:"100"});
+    if(offset)params.set("offset",offset);
+    const url="https://api.airtable.com/v0/"+brand.base+"/"+brand.table+"?"+params.toString();
+    const res=await fetch(url,{headers:{Authorization:"Bearer "+token},signal:AbortSignal.timeout(9000)});
+    if(!res.ok)throw new Error("Airtable returned HTTP "+res.status);
+    const data=await res.json();
+    for(const r of data.records||[]){
+     const f=r.fields||{};
+     videos.push({id:r.id,brand:brand.name,title:field(f,"Content Title","Title","Video Title","Name")||r.id,
       queue:field(f,"Queue Status","Status","Production Status"),
       heygen:field(f,"HeyGen Status","Video Status"),
       metricool:field(f,"Metricool Status","Publishing Status"),
@@ -36,8 +40,11 @@ exports.handler=async event=>{
       error:field(f,"Notes / Error","Error Details"),
       postId:field(f,"Metricool Post ID"),publishedDate:field(f,"Published Date"),
       held:brand.hold});
-   }
-   if(data.offset)errors.push(brand.name+": showing first 50 records; pagination pending");
+    }
+    offset=data.offset||null;
+    pages++;
+    if(pages>=25 && offset){errors.push(brand.name+": exceeded 2500 records; pagination incomplete");break;}
+   }while(offset);
   }catch(e){errors.push(brand.name+": "+e.message);}
  }
  return respond(200,{asOf:new Date().toISOString(),mode:"read-only",connections:{airtable:errors.length?"partial":"connected",heygen:"not connected",metricool:"not connected"},brands:BASES.map(b=>({name:b.name,hold:b.hold})),videos,errors,publicationVerified:false});
