@@ -9,7 +9,24 @@
 <section class="card"><h2>Action queue</h2><div id="actions"></div></section>
 <section class="card"><h2>Video pipeline</h2><p>Actual records will appear only after the secure server integration is deployed and validated.</p><div class="scroll"><table><thead><tr><th>Video</th><th>Brand</th><th>Airtable</th><th>HeyGen</th><th>Visual & branding QA</th><th>Keywords</th><th>Metricool</th><th>Network publication</th><th>Errors / retry</th></tr></thead><tbody id="videos"><tr><td colspan="9" class="muted">No verified live data connection</td></tr></tbody></table></div></section>
 <section class="card"><h2>Required end-to-end verification</h2><div class="grid"><div><h3>1. Source</h3><p>Read Airtable queue, brand, approvals and duplicate IDs. Airtable remains source of truth.</p></div><div><h3>2. Generation</h3><p>Allow HeyGen only after collision and hold checks; reconcile video IDs and render results.</p></div><div><h3>3. Quality</h3><p>Verify branding, framing, captions, keywords, aspect ratio and explicit review approval.</p></div><div><h3>4. Scheduling</h3><p>Check Metricool account connections and format support; prevent duplicate posts.</p></div><div><h3>5. Publication</h3><p>Verify every expected network independently, with actual post ID, URL and published timestamp.</p></div><div><h3>6. Recovery</h3><p>Show actionable failures, retry limits and audit history; never blindly regenerate.</p></div></div></section>
-</main><script>
+<section class="card" id="live"><h2>Live Airtable status · read-only</h2><p>Enter the dashboard access key configured in Netlify. It stays in this browser tab only; it is not stored or included in the URL.</p><div class="actions"><input id="access" type="password" autocomplete="off" placeholder="Dashboard access key" aria-label="Dashboard access key"><button id="sync" onclick="syncAirtable()">Check Airtable</button></div><p id="syncstatus">Not connected. No publication verification available.</p><div class="scroll"><table><thead><tr><th>Brand</th><th>Video</th><th>Queue</th><th>HeyGen</th><th>QA</th><th>Keywords</th><th>Metricool</th><th>Published (unverified)</th><th>Errors</th></tr></thead><tbody id="livevideos"><tr><td colspan="9">Awaiting secure connection</td></tr></tbody></table></div></section>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function syncAirtable(){
+ const key=document.getElementById('access').value;
+ const status=document.getElementById('syncstatus');
+ if(!key){status.textContent='Enter the access key first.';return;}
+ status.textContent='Checking Airtable…';
+ try{
+ const r=await fetch('/.netlify/functions/status',{headers:{'x-dashboard-key':key},cache:'no-store'});
+ const data=await r.json();
+ if(!r.ok)throw Error(data.error||'HTTP '+r.status);
+ const rows=data.videos||[];
+ document.getElementById('livevideos').innerHTML=rows.length?rows.map(v=>'<tr>'+[v.brand,v.title,v.queue,v.heygen,v.qa,v.keyword,v.metricool,v.publishedDate||'Not verified',v.error].map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="9">No records returned</td></tr>';
+ status.textContent='Airtable '+data.connections.airtable+' · '+rows.length+' records shown · HeyGen and Metricool API verification not connected · '+(data.errors||[]).join('; ');
+ }catch(e){status.textContent='Connection failed: '+e.message;}
+}
+</script></main><script>
 const brands=[{name:'Kiwi Driver Tours & Transfers',state:'Awaiting verification',networks:'Metricool brand 2581549'},{name:'Main Character Adventures',state:'Awaiting verification',networks:'Metricool brand 7097834'},{name:"Pilar's Facepainting",state:'Awaiting verification',networks:'Metricool brand 7179123'},{name:'Tiptoe the World',state:'ON HOLD — do not generate or publish',networks:'Metricool brand 7730350'}];
 const cards=[['Verified published', '—'],['Generating','—'],['Needs review','—'],['Scheduled','—'],['Blocked / failed','—']];
 document.querySelector('#summary').innerHTML=cards.map(([k,v])=>'<div class="card"><small>'+k+'</small><div><strong>'+v+'</strong></div><small>Live sync not connected</small></div>').join('');
