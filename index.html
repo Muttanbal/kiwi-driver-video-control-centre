@@ -22,7 +22,7 @@ async function testMetricool(){
   const data=await response.json();
   if(!response.ok)throw Error(data.error||'HTTP '+response.status);
   const brands=data.brands||[];
-  status.textContent='Metricool API response received · '+brands.map(b=>b.name+': '+(b.found?'found':'not found')).join(' · ')+' · Published posts not yet verified · Tiptoe ON HOLD';
+  status.textContent='Metricool API response received · '+brands.map(b=>b.name+': '+(b.found?'found':'not found')).join(' · ')+' · Published posts not yet verified · Tiptoe tracking enabled · publishing not enabled';
  }catch(e){status.textContent='Metricool test failed: '+e.message;}
 }
 async function testHeygen(){
@@ -58,14 +58,14 @@ async function syncAirtable(){
  const n=(fn)=>rows.filter(fn).length;
  const counts=[['Verified published', '—'],['Generating (Airtable)',n(v=>lower(v.heygen).includes('generat')||lower(v.queue).includes('generat'))],['Needs review (Airtable)',n(v=>lower(v.queue).includes('review')||lower(v.qa).includes('review'))],['Scheduled (Airtable)',n(v=>lower(v.metricool).includes('scheduled'))],['Blocked / failed (Airtable)',n(v=>/blocked|failed|error/.test(lower(v.queue)+' '+lower(v.heygen)+' '+lower(v.metricool)))]];
  document.getElementById('summary').innerHTML=counts.map(([k,v])=>'<div class="card"><small>'+esc(k)+'</small><div><strong>'+esc(v)+'</strong></div><small>'+ (k==='Verified published'?'Metricool verification pending':'Airtable-derived, unverified')+'</small></div>').join('');
- document.querySelector('#actions').innerHTML='<ol><li>Airtable: '+rows.length+' records retrieved; '+(data.errors.length?esc(data.errors.join('; ')):'no retrieval errors')+'</li><li>Connect and verify HeyGen job statuses directly.</li><li>Connect Metricool and verify each network post URL and timestamp.</li><li>Keep automatic generation and publishing disabled until collision checks and QA pass.</li><li>Tiptoe the World remains on hold.</li></ol>';
+ document.querySelector('#actions').innerHTML='<ol><li>Airtable: '+rows.length+' records retrieved; '+(data.errors.length?esc(data.errors.join('; ')):'no retrieval errors')+'</li><li>Connect and verify HeyGen job statuses directly.</li><li>Connect Metricool and verify each network post URL and timestamp.</li><li>Keep automatic generation and publishing disabled until collision checks and QA pass.</li><li>Tiptoe the World: tracking enabled; publishing not enabled.</li></ol>';
  }catch(e){status.textContent='Connection failed: '+e.message;}
 }
 </script></main><script>
-const brands=[{name:'Kiwi Driver Tours & Transfers',state:'Awaiting verification',networks:'Metricool brand 2581549'},{name:'Main Character Adventures',state:'Awaiting verification',networks:'Metricool brand 7097834'},{name:"Pilar's Facepainting",state:'Awaiting verification',networks:'Metricool brand 7179123'},{name:'Tiptoe the World',state:'ON HOLD — do not generate or publish',networks:'Metricool brand 7730350'}];
+const brands=[{name:'Kiwi Driver Tours & Transfers',state:'Awaiting verification',networks:'Metricool brand 2581549'},{name:'Main Character Adventures',state:'Awaiting verification',networks:'Metricool brand 7097834'},{name:"Pilar's Facepainting",state:'Awaiting verification',networks:'Metricool brand 7179123'},{name:'Tiptoe the World',state:'Tracking enabled · generation and publishing disabled',networks:'Metricool brand 7730350'}];
 const cards=[['Verified published', '—'],['Generating','—'],['Needs review','—'],['Scheduled','—'],['Blocked / failed','—']];
 document.querySelector('#summary').innerHTML=cards.map(([k,v])=>'<div class="card"><small>'+k+'</small><div><strong>'+v+'</strong></div><small>Live sync not connected</small></div>').join('');
-document.querySelector('#brands').innerHTML=brands.map(b=>'<div><b>'+b.name+'</b><p class="'+(b.name.startsWith('Tiptoe')?'hold':'muted')+'">'+b.state+'</p><small>'+b.networks+'</small></div>').join('');
+document.querySelector('#brands').innerHTML=brands.map(b=>'<div><b>'+b.name+'</b><p class="'+('muted')+'">'+b.state+'</p><small>'+b.networks+'</small></div>').join('');
 const todo=['Connect a secure server-side Airtable read-only sync and map all brand content tables.','Connect HeyGen job status and completed video metadata.','Connect Metricool brand and network posting state, including real published URLs.','Implement duplicate/collision locks and hold enforcement before enabling generation.','Require visual, branding and keyword QA approval before scheduling.','Test a single approved Kiwi Driver video end to end before enabling automatic publishing.'];
 document.querySelector('#actions').innerHTML='<ol>'+todo.map(x=>'<li style="margin-bottom:10px">'+x+'</li>').join('')+'</ol>';
 function downloadChecklist(){const blob=new Blob([todo.map((t,i)=>(i+1)+'. '+t).join('\n')],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='video-integration-checklist.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
