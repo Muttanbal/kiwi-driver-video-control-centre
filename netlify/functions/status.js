@@ -3,7 +3,7 @@ const BASES=[
  {name:"Kiwi Driver Tours & Transfers",base:"appct7pi5YLSblQdn",table:"tblJK4ZnNWydM3cOH",hold:false},
  {name:"Main Character Adventures",base:"appPw6rLz4bqVtxTe",table:"tbl8qL6BwZZMHUnvo",hold:false},
  {name:"Pilar's Facepainting",base:"appVcwJu3RV8BnhgZ",table:"tblWGf5QOpbsbwvY1",hold:false},
- {name:"Tiptoe the World",base:"appbXc5Rc402cK1Bq",table:"tblPOMwy77S960WGM",hold:true}
+ {name:"Tiptoe the World",base:"appbXc5Rc402cK1Bq",table:"tblPOMwy77S960WGM",hold:false}
 ];
 const safe=v=>typeof v==="string"?v:(v==null?"":Array.isArray(v)?v.map(safe).join(", "):String(v));
 const field=(f,...names)=>{for(const n of names)if(f[n]!==undefined)return safe(f[n]);return ""};
@@ -18,7 +18,7 @@ exports.handler=async event=>{
  if(!token)return respond(503,{error:"AIRTABLE_TOKEN not configured",connections:{airtable:"not configured",heygen:"not configured",metricool:"not configured"}});
  const videos=[],errors=[];
  for(const brand of BASES){
-  if(brand.hold){continue;} // TTW is deliberately excluded from all API calls
+  if(brand.hold){continue;} // skip brands with tracking disabled
   try{
    let offset=null, pages=0;
    do {
