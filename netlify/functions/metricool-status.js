@@ -13,8 +13,8 @@ exports.handler=async event=>{
   if(!res.ok)return out(502,{error:"Metricool API returned HTTP "+res.status});
   const raw=await res.json();
   const data=Array.isArray(raw)?raw:Array.isArray(raw.data)?raw.data:Array.isArray(raw.data?.items)?raw.data.items:[];
-  const expected=[{id:"2581549",name:"Kiwi Driver Tours & Transfers"},{id:"7097834",name:"Main Character Adventures"},{id:"7179123",name:"Pilar's Facepainting"}];
+  const expected=[{id:"2581549",name:"Kiwi Driver Tours & Transfers"},{id:"7097834",name:"Main Character Adventures"},{id:"7179123",name:"Pilar's Facepainting"},{id:"7730350",name:"Tiptoe the World"}];
   const brands=expected.map(b=>{const match=data.find(x=>String(x.blogId??x.id??x.brandId)===b.id);return {...b,found:!!match,connectedNetworks:match?.networksData??null};});
-  return out(200,{source:"Metricool API",verifiedAt:new Date().toISOString(),readOnly:true,brands,tiptoe:"ON HOLD — not included in results",publicationVerified:false});
+  return out(200,{source:"Metricool API",verifiedAt:new Date().toISOString(),readOnly:true,brands,tiptoe:"Tracking enabled; generation and publishing not enabled",publicationVerified:false});
  }catch(e){return out(502,{error:"Metricool check failed: "+e.message});}
 };
